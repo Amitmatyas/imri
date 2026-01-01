@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חנות חולצות כדורגל</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
+    <link href="https://fonts.googleapis.com/css?family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Heebo', Arial, sans-serif;
+            margin: 0;
+            background: #f4f4f4;
+            color: #333;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+        header {
+            background: #222;
+            color: #fff;
+            padding: 2em 0 1em 0;
+            text-align: center;
+            font-size: 2.2em;
+            letter-spacing: 4px;
+            border-bottom-left-radius: 16% 8%;
+            border-bottom-right-radius: 16% 8%;
+            box-shadow: 0 4px 24px 0 rgba(0,0,0,0.12);
+        }
+        #cart-toggle-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 16px 6px 16px 6px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
+            z-index: 1001;
+            transition: background 0.2s, transform 0.2s;
+        }
+        #cart-toggle-button:hover {
+            background: #c82333;
+            transform: scale(1.04) rotate(-1deg);
+        }
+        main#products-container {
+            padding: 40px 6vw 0 6vw;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+        .product-card {
+            background: #fff;
+            border-radius: 24px 24px 14px 14px;
+            box-shadow: 0 3px 12px 0 rgba(52, 52, 90, 0.13);
+            padding: 20px 10px 15px 10px;
+            text-align: center;
+            transition: transform 0.18s, box-shadow 0.18s;
+            border: 1.5px solid #e1e1e1;
+        }
+        .product-card:hover {
+            transform: scale(1.03) rotate(-1deg);
+            box-shadow: 0 8px 28px 0 rgba(52,52,90,0.16);
+            border-color: #dc3545;
+        }
+        .product-card img {
+            max-width: 98%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 22px;
+            margin-bottom: 13px;
+            border: 3px solid #f1f1f1;
+            box-shadow: 0 1px 8px 0 rgba(90,90,130,0.09);
+            transition: filter 0.2s;
+        }
+        .product-card img:hover {
+            filter: brightness(1.09) saturate(1.05) drop-shadow(0 2px 7px #dc354533);
+        }
+        .product-card h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.3em;
+            color: #dc3545;
+        }
+        .product-card .price {
+            font-weight: bold;
+            color: #c82333;
+            margin-bottom: 9px;
+            font-size: 1.12em;
+        }
+        .product-card button {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 1px 4px 0 rgba(52,52,90,0.08);
+            transition: background 0.18s, transform 0.13s;
+        }
+        .product-card button:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+        #cart-container {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: #fff;
+            border: 2px solid #ffdddd;
+            border-radius: 20px;
+            padding: 16px 14px 20px 14px;
+            box-shadow: 0 2px 18px 0 rgba(0,0,0,0.11);
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 370px;
+            display: none;
+            z-index: 1000;
+            transition: box-shadow 0.2s;
+        }
+        #cart-container:active, #cart-container:focus-within {
+            box-shadow: 0 4px 24px 0 #dc354533;
+        }
+        #cart h2 {
+            margin: 0 0 13px 0;
+            font-size: 1.3em;
+            color: #dc3545;
+        }
+        #cart ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #cart li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0 10px 0;
+            border-bottom: 1px solid #e2e2e2;
+            font-size: 1.06em;
+            gap: 4px;
+        }
+        #cart li:last-child {
+            border-bottom: none;
+        }
+        .cart-item-details {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+        .cart-item-details img {
+            width: 44px;
+            height: 44px;
+            margin-left: 10px;
+            border-radius: 12px;
+            border: 2px solid #ffe5e5;
+            object-fit: cover;
+            box-shadow: 0 1px 6px 0 #dc354522;
+        }
+        .cart-item-info {
+            flex-grow: 1;
+            text-align: right;
+            font-size: 1em;
+            min-width: 0;
+        }
+        .cart-item-info span {
+            display: block;
+            margin-bottom: 0.2em;
+            word-break: break-word;
+        }
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .cart-item-quantity button {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 0 2px;
+            transition: background 0.17s;
+        }
+        .cart-item-quantity button:hover {
+            background: #c82333;
+        }
+        #cart .total {
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: right;
+            font-size: 1.13em;
+            color: #dc3545;
+        }
+        #checkout-button {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 11px 19px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1.08em;
+            width: 98%;
+            margin-top: 16px;
+            font-weight: bold;
+            transition: background 0.18s, transform 0.12s;
+        }
+        #checkout-button:disabled {
+            background: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
+        #checkout-button:hover:not(:disabled) {
+            background: #c82333;
+            transform: scale(1.04);
+        }
+        #checkout-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(220, 53, 69, 0.22);
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+            backdrop-filter: blur(2.5px);
+            overflow-y: auto;
+        }
+        #checkout-form {
+            background: #fff;
+            padding: 20px 14px 22px 14px;
+            border-radius: 18px;
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+            box-shadow: 0 3px 20px 0 #dc354522;
+            margin: 20px auto;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #checkout-form h2 {
+            text-align: center;
+            margin-bottom: 16px;
+            color: #dc3545;
+        }
+        .form-group {
+            margin-bottom: 13px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"] {
+            width: calc(100% - 12px);
+            padding: 7px 6px;
+            border: 1.5px solid #d0d0d0;
+            border-radius: 6px;
+            font-size: 1em;
+            box-sizing: border-box;
+            background: #fffafa;
+            color: #232323;
+            transition: border 0.15s;
+        }
+        .form-group input:focus {
+            border: 1.5px solid #dc3545;
+            outline: none;
+        }
+        .form-actions {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .form-actions button {
+            background: #c82333;
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 13px;
+            cursor: pointer;
+            font-size: 1.07em;
+            margin: 0 8px;
+            font-weight: bold;
+            transition: background 0.16s, transform 0.11s;
+        }
+        .form-actions button:hover {
+            background: #bd2130;
+            transform: scale(1.03);
+        }
+        .close-modal-button {
+            background-color: #f0f0f0;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            position: absolute;
+            top: 11px;
+            right: 11px;
+            color: #dc3545;
+            transition: color 0.14s, background-color 0.14s;
+            font-family: 'Heebo', sans-serif;
+            font-weight: 900;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .close-modal-button:hover {
+            color: #c82333;
+            background-color: #e0e0e0;
+        }
+        #product-modal {
+            display: none;
+            position: fixed;
+            top: 0; right: 0; left: 0; bottom: 0;
+            background: rgba(56, 56, 80, 0.22);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(2px);
+            overflow-y: auto;
+        }
+        #product-modal .modal-content {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 32px 0 #dc354522;
+            display: flex;
+            flex-direction: row;
+            max-width: 520px;
+            width: 95vw;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+            margin: 20px auto;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #product-modal .modal-image {
+            flex: 1.2;
+            background: #fffafa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+        #product-modal .modal-image img {
+            max-width: 97%;
+            max-height: 320px;
+            border-radius: 0 0 0 20px;
+            object-fit: contain;
+        }
+        #product-modal .modal-details {
+            flex: 2.2;
+            padding: 24px 16px 18px 16px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        #product-modal .close-product-modal {
+            position: absolute;
+            top: 11px;
+            left: 11px;
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #dc3545;
+            cursor: pointer;
+            z-index: 5;
+            transition: color 0.14s;
+        }
+        #product-modal .close-product-modal:hover {
+            color: #c82333;
+        }
+        #product-modal .modal-details h2 {
+            margin: 0 0 7px 0;
+            color: #dc3545;
+            font-size: 1.32em;
+            white-space: pre-line;
+        }
+        #product-modal .modal-details .price {
+            color: #c82333;
+            font-weight: bold;
+            font-size: 1.08em;
+            margin-bottom: 8px;
+        }
+        #product-modal .modal-details .description {
+            color: #333;
+            font-size: 1.05em;
+            margin-bottom: 0;
+            white-space: pre-line;
+        }
+        .option-group {
+            margin: 10px 0;
+        }
+        .option-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .option-group select, .option-group input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1.5px solid #d0d0d0;
+            border-radius: 6px;
+            font-size: 1em;
+            background: #fffafa;
+            color: #232323;
+            transition: border 0.15s;
+            box-sizing: border-box;
+        }
+        .option-group select:focus, .option-group input[type="text"]:focus {
+            border: 1.5px solid #dc3545;
+            outline: none;
+        }
+        @media (max-width: 600px) {
+            #product-modal .modal-content {
+                flex-direction: column;
+                max-width: 97vw;
+                padding: 0;
+            }
+            #product-modal .modal-image img {
+                max-height: 200px;
+                border-radius: 20px 20px 0 0;
+            }
+        }
+        @media (max-width: 800px) {
+            main#products-container {
+                grid-template-columns: 1fr;
+                padding: 24px 2vw 0 2vw;
+            }
+            #cart-container { width: 97vw; left: 1vw; }
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AZGFbYTdHsMPlQoJYVYjCjUUKeB83lfi1k5AuDZD_70sr7yHE8Ac247Cv3efDssNxt9g-qNY_uWe54ea&currency=ILS"></script>
+</head>
+<body>
+    <header>
+        <h1>חנות חולצות כדורגל ⚽</h1>
+    </header>
+    <button id="cart-toggle-button">הצג/הסתר עגלת קניות</button>
+    <main id="products-container"></main>
+    <div id="cart-container">
+        <div id="cart">
+            <h2>עגלת קניות</h2>
+            <ul id="cart-items"></ul>
+            <div class="total">סה"כ: <span id="cart-total">0.00</span> ₪</div>
+            <button id="checkout-button">מעבר לתשלום</button>
+        </div>
+    </div>
+    <div id="checkout-modal">
+        <form id="checkout-form">
+            <button type="button" class="close-modal-button">&times;</button>
+            <h2>פרטי תשלום</h2>
+            <div class="form-group">
+                <label for="name">שם מלא:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">אימייל:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">טלפון:</label>
+                <input type="tel" id="phone" name="phone">
+            </div>
+            <div class="form-group">
+                <label for="address">כתובת:</label>
+                <input type="text" id="address" name="address" required>
+            </div>
+            <div class="form-group">
+                <div id="paypal-button-container"></div>
+            </div>
+        </form>
+    </div>
+    <div id="product-modal">
+        <div class="modal-content">
+            <button class="close-product-modal" type="button">&times;</button>
+            <div class="modal-image">
+                <img src="" alt="חולצה" id="modal-product-image">
+            </div>
+            <div class="modal-details">
+                <h2 id="modal-product-title"></h2>
+                <div class="price" id="modal-product-price"></div>
+                <div class="description" id="modal-product-description"></div>
+                <div id="custom-options-container"></div>
+                <button id="modal-add-to-cart" style="margin-top: 18px; background: #dc3545; color: #fff; border: none; padding: 10px 22px; border-radius: 16px; cursor: pointer; font-size: 1em; font-weight: bold;">
+                    הוסף לעגלה
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLHENaXTeorjL87sExB1EJrH7mrEnNYOA",
+            authDomain: "timetable-titus.firebaseapp.com",
+            projectId: "timetable-titus",
+            storageBucket: "timetable-titus.firebasestorage.app",
+            messagingSenderId: "199146911555",
+            appId: "1:199146911555:web:5d9436d716dfc6de7361f6",
+            measurementId: "G-JQ02VEC325"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const productsContainer = document.getElementById('products-container');
+        const cartItemsList = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        const checkoutButton = document.getElementById('checkout-button');
+        const checkoutModal = document.getElementById('checkout-modal');
+        const closeModalButtons = document.querySelectorAll('.close-modal-button');
+        const checkoutForm = document.getElementById('checkout-form');
+        const cartToggleButton = document.getElementById('cart-toggle-button');
+        const cartContainer = document.getElementById('cart-container');
+        const productModal = document.getElementById('product-modal');
+        const modalProductImage = document.getElementById('modal-product-image');
+        const modalProductTitle = document.getElementById('modal-product-title');
+        const modalProductPrice = document.getElementById('modal-product-price');
+        const modalProductDescription = document.getElementById('modal-product-description');
+        const closeProductModalBtn = document.querySelector('.close-product-modal');
+        const modalAddToCartBtn = document.getElementById('modal-add-to-cart');
+        const customOptionsContainer = document.getElementById('custom-options-container');
+        
+        let cart = [];
+        let products = [];
+        let currentModalProductId = null;
+        let currentProductOptions = {};
+        let total = 0;
+
+        async function fetchProducts() {
+            try {
+                const productsSnapshot = await db.collection('soccer_shirts').get();
+                products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderProducts();
+            } catch (error) { 
+                alert("שגיאה בטעינת חולצות."); 
+            }
+        }
+
+        function renderProducts() {
+            productsContainer.innerHTML = '';
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.classList.add('product-card');
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" class="product-image" data-id="${product.id}">
+                    <h3 class="product-title" data-id="${product.id}">${product.name}</h3>
+                    <p class="price">${product.price.toFixed(2)} ₪</p>
+                    <button class="add-to-cart" data-id="${product.id}">הוסף לעגלה</button>
+                `;
+                productCard.querySelector('.product-image').addEventListener('click', function(e) {
+                    openProductModal(product.id);
+                });
+                productCard.querySelector('.product-title').addEventListener('click', function(e) {
+                    openProductModal(product.id);
+                });
+                productCard.querySelector('.add-to-cart').addEventListener('click', function(e) {
+                    openProductModal(product.id);
+                });
+                productsContainer.appendChild(productCard);
+            });
+        }
+
+        function updateCartDisplay() {
+            cartItemsList.innerHTML = '';
+            total = 0;
+            cart.forEach(item => {
+                const listItem = document.createElement('li');
+                let optionsText = '';
+                if (item.selectedOptions) {
+                    Object.keys(item.selectedOptions).forEach(key => {
+                        if (item.selectedOptions[key]) {
+                            optionsText += `${key}: ${item.selectedOptions[key]} `;
+                        }
+                    });
+                }
+                
+                listItem.innerHTML = `
+                    <div class="cart-item-details">
+                        <img src="${item.displayImage || item.image}" alt="${item.name}">
+                        <div class="cart-item-info">
+                            <span>${item.name}</span>
+                            ${optionsText ? `<span style="font-size:0.9em;color:#666;">${optionsText}</span>` : ''}
+                            <span>${item.price.toFixed(2)} ₪ ליחידה</span>
+                        </div>
+                    </div>
+                    <div class="cart-item-quantity">
+                        <button class="decrease-quantity" data-cart-index="${cart.indexOf(item)}">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="increase-quantity" data-cart-index="${cart.indexOf(item)}">+</button>
+                    </div>
+                    <button class="remove-from-cart" data-cart-index="${cart.indexOf(item)}" title="הסר מהעגלה" style="background:#dc3545;color:#fff;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:1em;margin-right:8px;">🗑</button>
+                    <span>סה"כ: ${(item.price * item.quantity).toFixed(2)} ₪</span>
+                `;
+                cartItemsList.appendChild(listItem);
+                total += item.price * item.quantity;
+            });
+            cartTotalElement.textContent = total.toFixed(2);
+            if (cart.length === 0) {
+                const emptyCartMessage = document.createElement('li');
+                emptyCartMessage.textContent = 'העגלה ריקה';
+                cartItemsList.appendChild(emptyCartMessage);
+                cartTotalElement.textContent = '0.00';
+                checkoutButton.disabled = true;
+            } else {
+                checkoutButton.disabled = false;
+            }
+        }
+
+        function removeFromCart(cartIndex) {
+            cart.splice(cartIndex, 1);
+            updateCartDisplay();
+        }
+
+        function addToCart(productId, selectedOptions, displayImage) {
+            const productToAdd = products.find(p => p.id === productId);
+            
+            const existingItemIndex = cart.findIndex(item => {
+                if (item.id !== productToAdd.id) return false;
+                if (!item.selectedOptions && !selectedOptions) return true;
+                if (!item.selectedOptions || !selectedOptions) return false;
+                return JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions);
+            });
+            
+            if (existingItemIndex !== -1) {
+                cart[existingItemIndex].quantity++;
+            } else {
+                cart.push({ 
+                    ...productToAdd, 
+                    quantity: 1, 
+                    selectedOptions: selectedOptions,
+                    displayImage: displayImage
+                });
+            }
+            
+            updateCartDisplay();
+            cartContainer.style.display = 'block';
+        }
+
+        function changeQuantity(cartIndex, change) {
+            if (cart[cartIndex]) {
+                cart[cartIndex].quantity += change;
+                if (cart[cartIndex].quantity < 1) {
+                    cart.splice(cartIndex, 1);
+                }
+                updateCartDisplay();
+            }
+        }
+
+        cartItemsList.addEventListener('click', (event) => {
+            const cartIndex = parseInt(event.target.dataset.cartIndex);
+            if (!isNaN(cartIndex)) {
+                if (event.target.classList.contains('increase-quantity')) {
+                    changeQuantity(cartIndex, 1);
+                } else if (event.target.classList.contains('decrease-quantity')) {
+                    changeQuantity(cartIndex, -1);
+                } else if (event.target.classList.contains('remove-from-cart')) {
+                    removeFromCart(cartIndex);
+                }
+            }
+        });
+
+        checkoutButton.addEventListener('click', () => {
+            if (cart.length > 0) {
+                checkoutModal.style.display = 'flex';
+                renderPayPalButton();
+            } else {
+                alert('העגלה ריקה, לא ניתן לבצע תשלום.');
+            }
+        });
+
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                checkoutModal.style.display = 'none';
+            });
+        });
+
+        cartToggleButton.addEventListener('click', () => {
+            if (cartContainer.style.display === 'none') {
+                cartContainer.style.display = 'block';
+            } else {
+                cartContainer.style.display = 'none';
+            }
+        });
+
+        function openProductModal(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            modalProductImage.src = product.image;
+            modalProductImage.alt = product.name;
+            modalProductTitle.textContent = product.name;
+            modalProductPrice.textContent = `${product.price.toFixed(2)} ₪`;
+            modalProductDescription.textContent = product.description || '';
+            
+            currentProductOptions = {};
+            customOptionsContainer.innerHTML = '';
+            
+            if (product.customFields && product.customFields.length > 0) {
+                product.customFields.forEach((field, index) => {
+                    const optionGroup = document.createElement('div');
+                    optionGroup.className = 'option-group';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = field.name + ':';
+                    optionGroup.appendChild(label);
+                    
+                    if (field.type === 'select') {
+                        const select = document.createElement('select');
+                        select.id = `custom-field-${index}`;
+                        select.innerHTML = '<option value="">בחר ' + field.name + '</option>';
+                        
+                        field.options.forEach(option => {
+                            const opt = document.createElement('option');
+                            opt.value = option.value;
+                            opt.textContent = option.value;
+                            opt.dataset.image = option.image || '';
+                            select.appendChild(opt);
+                        });
+                        
+                        select.addEventListener('change', (e) => {
+                            currentProductOptions[field.name] = e.target.value;
+                            const selectedOption = field.options.find(o => o.value === e.target.value);
+                            if (selectedOption && selectedOption.image) {
+                                modalProductImage.src = selectedOption.image;
+                            } else {
+                                modalProductImage.src = product.image;
+                            }
+                        });
+                        
+                        optionGroup.appendChild(select);
+                    } else if (field.type === 'text') {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.id = `custom-field-${index}`;
+                        input.placeholder = 'הזן ' + field.name;
+                        
+                        input.addEventListener('input', (e) => {
+                            currentProductOptions[field.name] = e.target.value;
+                        });
+                        
+                        optionGroup.appendChild(input);
+                    }
+                    
+                    customOptionsContainer.appendChild(optionGroup);
+                });
+            }
+            
+            productModal.style.display = 'flex';
+            currentModalProductId = product.id;
+        }
+
+        modalAddToCartBtn.addEventListener('click', function() {
+            const product = products.find(p => p.id === currentModalProductId);
+            if (!product) return;
+            
+            if (product.customFields && product.customFields.length > 0) {
+                for (let i = 0; i < product.customFields.length; i++) {
+                    const field = product.customFields[i];
+                    if (field.required && !currentProductOptions[field.name]) {
+                        alert('אנא מלא את השדה: ' + field.name);
+                        return;
+                    }
+                }
+            }
+            
+            const currentDisplayImage = modalProductImage.src;
+            addToCart(currentModalProductId, {...currentProductOptions}, currentDisplayImage);
+            productModal.style.display = 'none';
+            currentProductOptions = {};
+        });
+
+        function closeProductModal() {
+            productModal.style.display = 'none';
+            currentProductOptions = {};
+        }
+
+        closeProductModalBtn.addEventListener('click', closeProductModal);
+        productModal.addEventListener('mousedown', function(e) {
+            if (e.target === productModal) {
+                closeProductModal();
+            }
+        });
+
+        window.addEventListener('keydown', function(e) {
+            if (productModal.style.display === 'flex' && e.key === 'Escape') {
+                closeProductModal();
+            }
+            if (checkoutModal.style.display === 'flex' && e.key === 'Escape') {
+                checkoutModal.style.display = 'none';
+            }
+        });
+
+        function renderPayPalButton() {
+            const container = document.getElementById('paypal-button-container');
+            if (!container) return;
+            container.innerHTML = "";
+            paypal.Buttons({
+                style: {
+                    color: 'blue',
+                    shape: 'pill',
+                    label: 'pay',
+                    height: 40
+                },
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: total.toFixed(2),
+                                currency_code: 'ILS'
+                            },
+                            description: 'רכישת חולצות כדורגל'
+                        }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(async function(details) {
+                        try {
+                            const name = document.getElementById('name').value;
+                            const email = document.getElementById('email').value;
+                            const phone = document.getElementById('phone').value;
+                            const address = document.getElementById('address').value;
+
+                            await db.collection('orders').add({
+                                customerName: name,
+                                customerEmail: email,
+                                customerPhone: phone,
+                                customerAddress: address,
+                                items: cart.map(item => ({
+                                    productId: item.id,
+                                    productName: item.name,
+                                    quantity: item.quantity,
+                                    price: item.price,
+                                    selectedOptions: item.selectedOptions || null
+                                })),
+                                totalAmount: parseFloat(total.toFixed(2)),
+                                orderDate: firebase.firestore.FieldValue.serverTimestamp(),
+                                status: 'completed',
+                                paymentType: 'paypal',
+                                paypalOrderId: details.id
+                            });
+
+                            alert(`תודה לך, ${name}! התשלום בפייפאל בוצע בהצלחה.\nסך הכל לתשלום: ${total.toFixed(2)} ₪`);
+                            cart = [];
+                            updateCartDisplay();
+                            checkoutModal.style.display = 'none';
+                            checkoutForm.reset();
+                        } catch (error) {
+                            alert("אירעה שגיאה בתהליך התשלום. נסה שוב.");
+                        }
+                    });
+                },
+                onCancel: function(data) {
+                    alert('התשלום בוטל.');
+                },
+                onError: function(err) {
+                    alert('שגיאה בתשלום: נסה שוב.');
+                    console.error(err);
+                }
+            }).render('#paypal-button-container');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchProducts();
+            updateCartDisplay();
+        });
+    </script>
+</body>
+</html>
