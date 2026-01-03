@@ -571,7 +571,7 @@
                 width: 90px;
                 height: 90px;
             }
-        }
+}
         @media (max-width: 800px) {
             main#products-container {
                 grid-template-columns: 1fr;
@@ -582,6 +582,21 @@
                 left: 1.5vw; 
             }
         }
+        
+        /* שינוי סדר התצוגה - אודות לפני יצירת קשר */
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .contact-section {
+            order: 2;
+        }
+        
+        .my-about-card {
+            order: 1;
+        }
+        
         @keyframes logoPulse {
             0% { filter: drop-shadow(0 0 2px rgba(0,210,255,0.2)); }
             50% { filter: drop-shadow(0 0 10px rgba(0,210,255,0.5)); }
