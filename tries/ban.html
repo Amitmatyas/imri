@@ -1159,9 +1159,9 @@
         
         const isSelectType = fieldData?.type === 'select' || !fieldData;
         
-        fieldContainer.innerHTML = `
+fieldContainer.innerHTML = `
             <div class="custom-field-header">
-                <input type="text" placeholder="שם השדה" class="field-name" value="${fieldData?.name || ''}" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="text" placeholder="שם השדה" class="field-name" value="${fieldData?.name || ''}" style="flex: 1; max-width: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                 <select class="field-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                     <option value="select" ${isSelectType ? 'selected' : ''}>בחירה מרשימה</option>
                     <option value="text" ${fieldData?.type === 'text' ? 'selected' : ''}>כתיבה חופשית</option>
