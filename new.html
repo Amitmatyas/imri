@@ -627,6 +627,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.paypal.com/sdk/js?client-id=AZGFbYTdHsMPlQoJYVYjCjUUKeB83lfi1k5AuDZD_70sr7yHE8Ac247Cv3efDssNxt9g-qNY_uWe54ea&currency=ILS"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
     <div id="announcement-bar">
@@ -1262,53 +1263,74 @@
                         }]
                     });
                 },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(async function(details) {
-                        try {
-                            const name = document.getElementById('name').value;
-                            const email = document.getElementById('email').value;
-                            const phone = document.getElementById('phone').value;
-                            const address = document.getElementById('address').value;
+onApprove: function(data, actions) {
+    return actions.order.capture().then(async function(details) {
+        try {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
 
-                            await db.collection('orders').add({
-                                customerName: name,
-                                customerEmail: email,
-                                customerPhone: phone,
-                                customerAddress: address,
-                                items: cart.map(item => ({
-                                    productId: item.id,
-                                    productName: item.name,
-                                    quantity: item.quantity,
-                                    price: item.price,
-                                    selectedOptions: item.selectedOptions || null,
-                                    isFreebie: item.isFreebie || false
-                                })),
-                                subtotal: parseFloat(subtotal.toFixed(2)),
-                                shippingCost: parseFloat(shippingCost.toFixed(2)),
-                                totalAmount: parseFloat(total.toFixed(2)),
-                                appliedCoupon: appliedCoupon ? appliedCoupon.Code : null,
-                                orderDate: firebase.firestore.FieldValue.serverTimestamp(),
-                                status: 'completed',
-                                completed: false,
-                                paymentType: 'paypal',
-                                paypalOrderId: details.id
-                            });
+            // שמירת ההזמנה ב-Firebase
+            const orderRef = await db.collection('orders').add({
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                customerAddress: address,
+                items: cart.map(item => ({
+                    productId: item.id,
+                    productName: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    selectedOptions: item.selectedOptions || null,
+                    isFreebie: item.isFreebie || false
+                })),
+                subtotal: parseFloat(subtotal.toFixed(2)),
+                shippingCost: parseFloat(shippingCost.toFixed(2)),
+                totalAmount: parseFloat(total.toFixed(2)),
+                appliedCoupon: appliedCoupon ? appliedCoupon.Code : null,
+                orderDate: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'completed',
+                completed: false,
+                paymentType: 'paypal',
+                paypalOrderId: details.id
+            });
 
-                            alert(`תודה לך, ${name}! התשלום בוצע בהצלחה.\nסך הכל לתשלום: ${total.toFixed(2)} ₪`);
-                            cart = [];
-                            appliedCoupon = null;
-                            couponInput.value = '';
-                            couponInput.disabled = false;
-                            applyCouponBtn.disabled = false;
-                            couponMessage.innerHTML = '';
-                            updateCartDisplay();
-                            checkoutModal.style.display = 'none';
-                            checkoutForm.reset();
-                        } catch (error) {
-                            alert("אירעה שגיאה בתהליך התשלום. נסה שוב.");
-                        }
-                    });
-                },
+            // שליחת קבלה במייל
+            const emailSent = await sendReceiptEmail({
+                orderId: orderRef.id,
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                customerAddress: address,
+                items: cart,
+                subtotal: subtotal,
+                shippingCost: shippingCost,
+                totalAmount: total,
+                appliedCoupon: appliedCoupon ? appliedCoupon.Code : null
+            });
+
+            if (emailSent) {
+                alert(`תודה לך, ${name}! התשלום בוצע בהצלחה.\nקבלה נשלחה לכתובת המייל שלך: ${email}\nסך הכל לתשלום: ${total.toFixed(2)} ₪`);
+            } else {
+                alert(`תודה לך, ${name}! התשלום בוצע בהצלחה.\nסך הכל לתשלום: ${total.toFixed(2)} ₪\n(שגיאה בשליחת הקבלה במייל, אך ההזמנה נשמרה)`);
+            }
+
+            cart = [];
+            appliedCoupon = null;
+            couponInput.value = '';
+            couponInput.disabled = false;
+            applyCouponBtn.disabled = false;
+            couponMessage.innerHTML = '';
+            updateCartDisplay();
+            checkoutModal.style.display = 'none';
+            checkoutForm.reset();
+        } catch (error) {
+            console.error('Error:', error);
+            alert("אירעה שגיאה בתהליך התשלום. נסה שוב.");
+        }
+    });
+}
                 onCancel: function(data) {
                     alert('התשלום בוטל.');
                 },
@@ -1318,7 +1340,86 @@
                 }
             }).render('#paypal-button-container');
         }
+// הגדרות EmailJS
+const EMAILJS_SERVICE_ID = 'service_pypll0n';
+const EMAILJS_TEMPLATE_ID = 'template_c87wr1z';
+const EMAILJS_PUBLIC_KEY = 'f-U3pdugkQiavzAvU';
 
+// אתחול EmailJS
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// פונקציה לשליחת קבלה במייל
+async function sendReceiptEmail(orderData) {
+    try {
+        // בניית רשימת המוצרים עבור הטבלה
+        const productsListHTML = orderData.items.map(item => {
+            const optionsText = item.selectedOptions 
+                ? Object.entries(item.selectedOptions)
+                    .filter(([_, value]) => value)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(', ')
+                : '';
+            
+            const productDescription = item.productName + (optionsText ? ` (${optionsText})` : '');
+            
+            return `
+                <tr>
+                    <td>${productDescription}</td>
+                    <td>${item.quantity}</td>
+                    <td>₪${item.price.toFixed(2)}</td>
+                    <td>₪${(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // חישוב הנחה
+        let discountAmount = 0;
+        if (orderData.appliedCoupon && appliedCoupon) {
+            if (appliedCoupon.Type === 'fixed_discount') {
+                discountAmount = appliedCoupon.Value;
+            } else if (appliedCoupon.Type === 'percentage_discount') {
+                discountAmount = (orderData.subtotal * appliedCoupon.Value) / 100;
+            }
+        }
+
+        // הכנת הפרמטרים לשליחת המייל
+        const templateParams = {
+            to_email: orderData.customerEmail,
+            to_name: orderData.customerName,
+            name: orderData.customerName,
+            email: orderData.customerEmail,
+            phone: orderData.customerPhone,
+            address: orderData.customerAddress,
+            order_id: orderData.orderId,
+            date: new Date().toLocaleDateString('he-IL', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            products_list: productsListHTML,
+            subtotal: orderData.subtotal.toFixed(2),
+            coupon_code: orderData.appliedCoupon || '',
+            discount_amount: discountAmount.toFixed(2),
+            shipping_cost: orderData.shippingCost.toFixed(2),
+            total_amount: orderData.totalAmount.toFixed(2)
+        };
+
+        // שליחת המייל
+        const response = await emailjs.send(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_TEMPLATE_ID,
+            templateParams
+        );
+
+        console.log('Email sent successfully:', response);
+        return true;
+    } catch (error) {
+        console.error('Error sending email:', error);
+        return false;
+    }
+}
         document.addEventListener('DOMContentLoaded', async () => {
             await loadSettings();
             await loadAnnouncements();
