@@ -302,7 +302,6 @@
 
         <!-- הגדרות משלוח וקופונים -->
         <section id="settings-section">
-            <h2>הגדרות משלוח וקופונים</h2>
             
             <h3>הגדרות משלוח</h3>
             <div class="shipping-settings">
@@ -358,7 +357,7 @@
 
         <!-- הודעות -->
         <section id="announcements-section">
-            <h2>הודעות לשורת ההכרזות</h2>
+            <h2>הודעות</h2>
             <div class="form-group">
                 <label for="announcement-text">טקסט הודעה (עד 5 הודעות):</label>
                 <input type="text" id="announcement-text" placeholder="הזן הודעה">
@@ -1439,7 +1438,7 @@ fieldContainer.innerHTML = `
         });
         
         document.getElementById('delete-product-btn').addEventListener('click', async () => {
-            if (confirm('האם אתה בטוח שברצונך למחוק חולצה זו? פעולה זו אינה ניתנת לביטול!')) {
+            if (confirm('האם אתה בטוח שברצונך למחוק חולצה זו?')) {
                 try {
                     await db.collection('soccer_shirts').doc(productId).delete();
                     alert('החולצה נמחקה בהצלחה!');
